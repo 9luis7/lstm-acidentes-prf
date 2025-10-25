@@ -1,0 +1,22 @@
+# Dependências do Projeto LSTM - Previsão de Acidentes PRF
+# Instalar com: pip install -r requirements.txt
+
+# Download de dados
+gdown>=5.0.0
+openpyxl>=3.1.0
+
+# Manipulação de dados
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualização
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+tensorflow>=2.13.0
+
+# Jupyter (opcional, se executando localmente)
+jupyter>=1.0.0
+ipykernel>=6.0.0

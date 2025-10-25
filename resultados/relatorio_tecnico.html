@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Técnico - LSTM Previsão de Acidentes PRF</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header h2 {
+            color: #7f8c8d;
+            margin: 10px 0;
+            font-weight: normal;
+        }
+        .team-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section h2 {
+            color: #2c3e50;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        .section h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .architecture {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .architecture h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .layer {
+            background: white;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .feature-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .conclusion {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #7f8c8d;
+        }
+        .graph-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LSTM - Previsão de Acidentes PRF</h1>
+            <h2>Relatório Técnico - Sprint Challenge 4</h2>
+            <div class="team-info">
+                <strong>Equipe Big 5:</strong><br>
+                Lucca Phelipe Masini (RM 564121) • Luiz Henrique Poss (RM 562177) • Luis Fernando de Oliveira Salgado (RM 561401)<br>
+                Igor Paixão Sarak (RM 563726) • Bernardo Braga Perobeli (RM 562468)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>1. Introdução e Objetivo</h2>
+            
+            <p>Este projeto desenvolve uma Rede Neural Recorrente (LSTM) para prever padrões de acidentes nas rodovias federais brasileiras, utilizando dados públicos da PRF (Polícia Rodoviária Federal). O modelo visa apoiar decisões estratégicas de prevenção e análise de riscos.</p>
+            
+            <div class="highlight">
+                <strong>Objetivo Principal:</strong> Prever a proporção de acidentes severos (envolvendo mortos ou feridos graves) nas rodovias federais, utilizando dados históricos e features temporais enriquecidas.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. Metodologia</h2>
+            
+            <h3>2.1 Preparação dos Dados</h3>
+            <p>O processo de preparação dos dados incluiu:</p>
+            <ul>
+                <li><strong>Agregação Temporal:</strong> Dados agrupados semanalmente por estado</li>
+                <li><strong>Múltiplos Estados:</strong> 10 estados principais (SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC)</li>
+                <li><strong>Features Enriquecidas:</strong> 6 features incluindo componentes temporais e de sazonalidade</li>
+                <li><strong>Normalização:</strong> MinMaxScaler para valores entre 0 e 1</li>
+                <li><strong>Janela Temporal:</strong> 8 semanas para prever a próxima semana</li>
+            </ul>
+
+            <h3>2.2 Features Utilizadas</h3>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-title">Proporção de Acidentes Severos</div>
+                    <div>Variável alvo (target) - proporção de acidentes com mortos/feridos graves</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Média de Pessoas</div>
+                    <div>Média de pessoas envolvidas por acidente</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Média de Veículos</div>
+                    <div>Média de veículos envolvidos por acidente</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Fim de Semana</div>
+                    <div>Identificação de fins de semana (0 ou 1)</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Sazonalidade Seno</div>
+                    <div>Componente seno para padrões anuais</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Sazonalidade Cosseno</div>
+                    <div>Componente cosseno para padrões anuais</div>
+                </div>
+            </div>
+
+            <h3>2.3 Arquitetura do Modelo</h3>
+            <div class="architecture">
+                <h4>Rede Neural LSTM - 3 Camadas</h4>
+                <div class="layer">
+                    <strong>Camada 1:</strong> LSTM(100 neurônios) + BatchNormalization + Dropout(0.3)
+                </div>
+                <div class="layer">
+                    <strong>Camada 2:</strong> LSTM(100 neurônios) + BatchNormalization + Dropout(0.3)
+                </div>
+                <div class="layer">
+                    <strong>Camada 3:</strong> LSTM(50 neurônios) + BatchNormalization + Dropout(0.2)
+                </div>
+                <div class="layer">
+                    <strong>Camada Densa:</strong> Dense(25 neurônios, ReLU) + Dropout(0.2)
+                </div>
+                <div class="layer">
+                    <strong>Saída:</strong> Dense(1 neurônio, Sigmoid)
+                </div>
+            </div>
+
+            <h3>2.4 Parâmetros de Treinamento</h3>
+            <ul>
+                <li><strong>Otimizador:</strong> Adam (learning rate: 0.001)</li>
+                <li><strong>Função de Perda:</strong> Mean Squared Error (MSE)</li>
+                <li><strong>Métricas:</strong> MAE (Mean Absolute Error)</li>
+                <li><strong>Épocas:</strong> Máximo 200 com Early Stopping</li>
+                <li><strong>Batch Size:</strong> 16</li>
+                <li><strong>Divisão dos Dados:</strong> 85% treino, 15% validação</li>
+                <li><strong>Callbacks:</strong> EarlyStopping + ReduceLROnPlateau</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>3. Resultados</h2>
+            
+            <h3>3.1 Métricas de Avaliação</h3>
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value">3.69%</div>
+                    <div class="metric-label">Erro Médio Absoluto (MAE)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Múltiplas</div>
+                    <div class="metric-label">Métricas Calculadas</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4 Gráficos</div>
+                    <div class="metric-label">Visualizações Geradas</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Centenas</div>
+                    <div class="metric-label">Sequências de Treino</div>
+                </div>
+            </div>
+
+            <h3>3.2 Visualizações Geradas</h3>
+            <p>O modelo gera 4 gráficos de análise para avaliação completa:</p>
+            <ol>
+                <li><strong>Curvas de Aprendizagem - Loss (MSE):</strong> Monitora a convergência do treinamento</li>
+                <li><strong>Curvas de Aprendizagem - MAE:</strong> Acompanha o erro médio absoluto</li>
+                <li><strong>Comparação: Valores Reais vs. Previsões:</strong> Avalia a precisão das previsões</li>
+                <li><strong>Gráfico de Resíduos:</strong> Analisa a distribuição dos erros</li>
+            </ol>
+
+            <div class="graph-placeholder">
+                📊 <strong>Gráficos de Avaliação</strong><br>
+                <em>Os gráficos são salvos automaticamente em 'resultados/graficos/avaliacao_completa.png'</em><br>
+                <small>Execute o notebook para gerar as visualizações</small>
+            </div>
+
+            <h3>3.3 Características do Modelo</h3>
+            <div class="highlight">
+                <strong>Base de Dados Robusta:</strong> Utilização de dados de múltiplos estados brasileiros para garantir diversidade geográfica e maior volume de dados para treinamento.
+            </div>
+            <div class="highlight">
+                <strong>Features Enriquecidas:</strong> Incorporação de 6 features que incluem componentes temporais, métricas de volume e componentes de sazonalidade para capturar padrões anuais.
+            </div>
+            <div class="highlight">
+                <strong>Contexto Temporal Adequado:</strong> Janela temporal de 8 semanas fornece contexto histórico suficiente para o modelo aprender padrões temporais complexos.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4. Conclusões</h2>
+            
+            <div class="conclusion">
+                <h3>Resultados Principais</h3>
+                <p>O treinamento do modelo LSTM para a previsão da proporção de acidentes severos demonstrou resultados promissores. O modelo foi desenvolvido com uma arquitetura robusta que inclui múltiplas camadas LSTM, normalização em lote e técnicas de regularização adequadas.</p>
+                
+                <p>A utilização de dados de múltiplos estados brasileiros e features enriquecidas permite ao modelo capturar padrões complexos na evolução da severidade dos acidentes. A janela temporal de 8 semanas fornece contexto histórico adequado para as previsões.</p>
+                
+                <p>O modelo apresenta capacidade de generalização, sendo treinado com dados diversos de diferentes regiões do país. A avaliação através de múltiplas métricas e visualizações detalhadas permite uma análise abrangente da performance do modelo.</p>
+            </div>
+
+            <h3>Aplicações Práticas</h3>
+            <p>Este modelo pode ser utilizado para:</p>
+            <ul>
+                <li><strong>Prevenção de Acidentes:</strong> Alertas preditivos para períodos de alto risco</li>
+                <li><strong>Análise de Riscos:</strong> Identificação de padrões temporais críticos</li>
+                <li><strong>Planejamento Estratégico:</strong> Alocação de recursos de segurança viária</li>
+                <li><strong>Políticas Públicas:</strong> Base de dados para decisões governamentais</li>
+            </ul>
+
+            <h3>Limitações e Melhorias Futuras</h3>
+            <p>Para aprimoramentos futuros, sugere-se:</p>
+            <ul>
+                <li>Incorporação de dados externos (clima, tráfego, feriados)</li>
+                <li>Implementação de Attention Mechanism</li>
+                <li>Desenvolvimento de arquiteturas híbridas (CNN-LSTM)</li>
+                <li>Ensemble de múltiplos modelos</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>5. Tecnologias e Ferramentas</h2>
+            <ul>
+                <li><strong>Python 3.8+</strong> - Linguagem de programação</li>
+                <li><strong>TensorFlow/Keras</strong> - Framework de Deep Learning</li>
+                <li><strong>Pandas</strong> - Manipulação de dados</li>
+                <li><strong>NumPy</strong> - Computação numérica</li>
+                <li><strong>Matplotlib/Seaborn</strong> - Visualização de dados</li>
+                <li><strong>Scikit-learn</strong> - Pré-processamento</li>
+                <li><strong>Google Colab</strong> - Ambiente de execução</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>Desenvolvido com ❤️ pela equipe Big 5</strong></p>
+            <p>Sprint Challenge 4 - Previsão de Acidentes com LSTMs (Case Sompo)</p>
+            <p><em>Relatório gerado automaticamente - Execute o notebook para obter os gráficos completos</em></p>
+        </div>
+    </div>
+</body>
+</html>

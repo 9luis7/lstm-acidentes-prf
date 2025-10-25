@@ -1,0 +1,44 @@
+# Arquivos de dados
+*.xlsx
+*.csv
+*.xls
+
+# Modelos treinados
+*.keras
+*.h5
+*.pkl
+*.joblib
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Ambiente virtual
+venv/
+env/
+ENV/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
