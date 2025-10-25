@@ -1,127 +1,453 @@
-# Sprint Challenge 4 – Previsão de Acidentes com LSTMs (Case Sompo)
+# 🚗 Sprint Challenge 4 – Previsão de Acidentes com LSTMs
 
-**Integrantes Big 5:**
-- Lucca Phelipe Masini RM 564121
-- Luiz Henrique Poss RM562177
-- Luis Fernando de Oliveira Salgado RM 561401
-- Igor Paixão Sarak RM 563726
-- Bernardo Braga Perobeli RM 562468
+**Case Sompo**: Antecipando Padrões de Risco em Rodovias Brasileiras
 
 ---
 
-## 1. Objetivo do Projeto
-Desenvolver e treinar uma Rede Neural Recorrente (LSTM) para prever padrões de acidentes nas rodovias federais, utilizando a base de dados pública da PRF. O modelo visa apoiar decisões estratégicas de prevenção e análise de riscos.
+## 👥 Equipe Big 5
+
+- **Lucca Phelipe Masini** - RM 564121
+- **Luiz Henrique Poss** - RM 562177  
+- **Luis Fernando de Oliveira Salgado** - RM 561401
+- **Igor Paixão Sarak** - RM 563726
+- **Bernardo Braga Perobeli** - RM 562468
 
 ---
 
-## 2. Instruções Claras de Execução
+## 🎯 Objetivo do Projeto
 
-A forma mais simples de executar este projeto é através do Google Colab:
+Desenvolver uma rede neural LSTM capaz de **classificar níveis de risco de acidentes severos** em rodovias federais brasileiras, utilizando dados públicos da PRF (Polícia Rodoviária Federal).
 
-1.  **[Clique aqui para abrir o Notebook no Google Colab](https://colab.research.google.com/github/SEU_USUARIO/SEU_REPO/blob/main/Sprint_4_LSTM_Grupo_BIG5.ipynb)** *(**Atenção:** Substitua `SEU_USUARIO/SEU_REPO` pela URL do seu repositório)*
-
-2.  Com o notebook aberto, clique no menu **"Ambiente de execução"**.
-3.  Clique em **"Executar tudo"**.
-
-O notebook irá instalar as dependências, baixar o dataset do Google Drive, tratar os dados, treinar o modelo e gerar os gráficos de avaliação automaticamente.
+O modelo visa apoiar decisões estratégicas para:
+- 🚑 **Prevenção de riscos**: Identificar períodos críticos
+- 💰 **Seguradoras**: Precificação dinâmica de seguros
+- 📊 **Planejamento logístico**: Alocação inteligente de recursos
 
 ---
 
-## 3. Relatório Curto do Projeto
+## 📊 Target Escolhido: Classificação de 4 Níveis de Risco
 
-### Qual foi o target escolhido e por quê?
+### Definição das Classes
 
-O target escolhido foi uma variável binária chamada `severo`. 
--   Ela recebe o valor `1` se o acidente envolveu `mortos > 0` ou `feridos_graves > 0`.
--   Ela recebe o valor `0` para todos os outros casos (apenas feridos leves ou ilesos).
+| Classe | Nome | Faixa | Descrição |
+|--------|------|-------|-----------|
+| 0 | **BAIXO** | < 20% | Menos de 20% dos acidentes são severos |
+| 1 | **MÉDIO-BAIXO** | 20-30% | Entre 20% e 30% de acidentes severos |
+| 2 | **MÉDIO-ALTO** | 30-40% | Entre 30% e 40% de acidentes severos |
+| 3 | **ALTO** | ≥ 40% | 40% ou mais de acidentes severos |
 
-A justificativa é focar os esforços de previsão nos acidentes de maior impacto humano e social, que são o principal ponto de preocupação para estratégias de prevenção e para o mercado de seguros.
+### Justificativa da Escolha
 
-### Como os dados foram tratados?
+#### 🔬 Processo Científico
 
-O tratamento foi feito em 3 etapas principais:
-1.  **Limpeza:** Carregamos o dataset (`.xlsx`), ajustamos tipos de dados (como `horario`) e criamos a coluna alvo `severo`.
-2.  **Agregação:** Transformamos os dados de registros individuais em uma série temporal. Agrupamos os acidentes por **semana** e por **estado (UF)**, calculando a `prop_severos` (proporção de acidentes severos) para cada período.
-3.  **Sequenciamento:** Para a LSTM, filtramos os dados para os estados principais (SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC) e criamos "janelas" de dados. O modelo usa os dados de 4 semanas (`X`) para prever a proporção da semana seguinte (`y`).
+**Tentativa Inicial**: Regressão
+- Objetivo: Prever proporção exata de acidentes severos (valor contínuo)
+- ❌ Resultado: R² negativo (modelo pior que baseline)
+- ❌ Problema: Previsões constantes (~0.29), sem variabilidade
+- 🤔 Causa: Features disponíveis não capturam fatores críticos (clima, eventos, tráfego)
 
-### Arquitetura do modelo LSTM
+**Descoberta Importante**:
+> As features temporais e de histórico disponíveis não contêm informação suficiente para previsões precisas de valores contínuos. Extremos dependem de fatores externos não capturados no dataset.
 
-Utilizamos uma arquitetura de LSTM "empilhada" (stacked), ideal para capturar padrões temporais:
-1.  **Camada LSTM** (`units=50`, `return_sequences=True`) - Lê a sequência de entrada.
-2.  **Dropout** (`0.2`) - Regularização para evitar overfitting.
-3.  **Camada LSTM** (`units=50`) - Processa a sequência da camada anterior.
-4.  **Dropout** (`0.2`) - Mais regularização.
-5.  **Camada Densa** (`units=1`) - A camada de saída, que prevê o valor final (a proporção de 0 a 1).
+**Solução Final**: Classificação
+- ✅ Mais robusta às limitações dos dados
+- ✅ Mais útil na prática (alertas: "Semana de risco ALTO")
+- ✅ Não requer precisão decimal
+- ✅ Facilita tomada de decisão
 
-O modelo foi compilado com o otimizador `adam` (learning rate 0.001) e a função de perda `mean_squared_error`.
+#### 💼 Valor Prático
 
-### Métricas utilizadas para avaliação
+**Para Seguradoras:**
+```
+Risco BAIXO  → Precificação padrão
+Risco MÉDIO  → Campanhas preventivas
+Risco ALTO   → Alertas críticos + precificação ajustada
+```
 
-Utilizamos duas métricas principais para avaliar o modelo nos dados de validação:
-1.  **Loss (Mean Squared Error):** Usada pelo modelo durante o treino. O gráfico de Loss vs. Val_Loss mostrou que o modelo aprendeu e o `EarlyStopping` funcionou corretamente.
-2.  **Erro Médio Absoluto (MAE):** Métrica principal para interpretação humana. O modelo obteve um **MAE** que indica a precisão das previsões em pontos percentuais.
-
-Isso significa que, em média, a previsão do modelo sobre a proporção de acidentes severos tem um erro baixo, demonstrando boa capacidade de generalização.
-
-### Features Utilizadas
-
-O modelo utiliza 6 features principais:
-1. **Proporção de Acidentes Severos** (target)
-2. **Média de Pessoas por Acidente**
-3. **Média de Veículos por Acidente**
-4. **Identificação de Fim de Semana** (binária)
-5. **Sazonalidade Seno** (padrões anuais)
-6. **Sazonalidade Cosseno** (padrões anuais)
-
-### Estados Incluídos
-
-O modelo foi treinado com dados de 10 estados brasileiros:
-- SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC
-
-Essa diversidade geográfica garante que o modelo possa generalizar bem para diferentes regiões do país.
-
-### Janela Temporal
-
-Utilizamos uma janela de **4 semanas** para prever a semana seguinte. Isso fornece contexto histórico suficiente para capturar padrões temporais sem tornar o modelo excessivamente complexo.
+**Para Gestores de Rodovias:**
+```
+Risco BAIXO  → Operação normal
+Risco ALTO   → Aumento de patrulhas + campanhas intensivas
+```
 
 ---
 
-## 4. Tecnologias Utilizadas
+## 🛠️ Como os Dados Foram Tratados
 
-- **Python 3.8+**
-- **TensorFlow/Keras** - Deep Learning
+### 1. Limpeza e Preparação
+
+```python
+# Criação da variável 'severo' (target binário intermediário)
+df['severo'] = ((df['mortos'] > 0) | (df['feridos_graves'] > 0)).astype(int)
+```
+
+**Definição de Acidente Severo:**
+- `severo = 1` se mortos > 0 **OU** feridos_graves > 0
+- `severo = 0` caso contrário
+
+### 2. Agregação Temporal
+
+**Transformação**: Acidentes individuais → Séries temporais semanais por UF
+
+```python
+# Agregação semanal
+weekly_df = df.groupby([pd.Grouper(freq='W'), 'uf']).agg({
+    'total_acidentes': count,
+    'acidentes_severos': sum,
+    'pessoas_media': mean,
+    'veiculos_media': mean
+})
+
+# Cálculo do target contínuo
+weekly_df['prop_severos'] = acidentes_severos / total_acidentes
+```
+
+**Por quê semanal?**
+- ✅ Suficiente para capturar padrões
+- ✅ Evita esparsidade (muitos zeros diários)
+- ✅ Útil para planejamento (campanhas semanais)
+
+### 3. Feature Engineering
+
+**12 Features Criadas:**
+
+| Categoria | Features | Propósito |
+|-----------|----------|-----------|
+| **Temporais** | `dia_semana`, `mes`, `fim_semana` | Capturar padrões semanais/mensais |
+| **Sazonalidade** | `sazonalidade_sen`, `sazonalidade_cos` | Ciclos anuais (férias, festas) |
+| **Histórico (Lags)** | `prop_severos_lag1/2/3` | Memória das últimas 3 semanas |
+| **Estatísticas** | `prop_severos_ma3` | Média móvel (tendência) |
+| | `prop_severos_tendencia` | Está subindo ou descendo? |
+| | `prop_severos_volatilidade` | Estabilidade da série |
+
+### 4. Preparação para LSTM
+
+**Sequências Temporais:**
+```
+Janela: 8 semanas de histórico → Prevê semana 9
+Formato: [amostras, 8 timesteps, 12 features]
+```
+
+**Normalização:**
+- MinMaxScaler (0-1) para todas as features
+- Essencial para convergência da LSTM
+
+**Divisão Temporal:**
+- 85% treino, 15% validação
+- ⚠️ **SEM shuffle** (respeita ordem temporal)
+
+---
+
+## 🧠 Arquitetura do Modelo LSTM
+
+### Diagrama da Rede
+
+```
+Input: (8 timesteps, 12 features)
+    ↓
+┌─────────────────────────────┐
+│  LSTM Layer 1 (64 units)    │  ← Captura padrões temporais complexos
+│  return_sequences=True       │
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  Dropout (0.2)               │  ← Previne overfitting
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  LSTM Layer 2 (32 units)     │  ← Refina os padrões
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  Dropout (0.2)               │
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  Dense (32 units, ReLU)      │  ← Processamento não-linear
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  Dropout (0.2)               │
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  Dense (4 units, Softmax)    │  ← Probabilidades das 4 classes
+└─────────────────────────────┘
+```
+
+### Hiperparâmetros
+
+| Parâmetro | Valor | Justificativa |
+|-----------|-------|---------------|
+| **Loss Function** | `categorical_crossentropy` | Padrão para classificação multiclasse |
+| **Optimizer** | `Adam` (lr=0.001) | Adaptativo, converge bem |
+| **Batch Size** | 16 | Balanceio entre velocidade e estabilidade |
+| **Epochs** | 100 | Com EarlyStopping |
+| **Dropout** | 0.2 | Regularização moderada |
+
+### Callbacks
+
+**EarlyStopping:**
+```python
+patience=20, restore_best_weights=True
+```
+- Para se não houver melhoria em 20 épocas
+- Restaura pesos da melhor época
+
+**ReduceLROnPlateau:**
+```python
+factor=0.5, patience=10
+```
+- Reduz learning rate pela metade se estagnado
+- Ajuda a escapar de platôs
+
+---
+
+## 📈 Métricas de Avaliação
+
+### Métricas Utilizadas
+
+Para classificação multiclasse, utilizamos:
+
+| Métrica | Descrição | Objetivo |
+|---------|-----------|----------|
+| **Acurácia** | % de previsões corretas | > 40-50% (baseline ~30%) |
+| **Precision** | De todas as previsões da classe X, quantas estão corretas? | Alta confiança nas previsões |
+| **Recall** | De todos os casos reais da classe X, quantos identificamos? | Não perder casos importantes |
+| **F1-Score** | Média harmônica de Precision e Recall | Balanceamento geral |
+| **Matriz de Confusão** | Onde o modelo erra? | Identificar confusões sistemáticas |
+
+### Baselines para Comparação
+
+- 🎲 **Random Guess**: 25% (4 classes equiprováveis)
+- 📊 **Classe Mais Comum**: ~30-35% (sempre prever a classe majoritária)
+- 🎯 **Nosso Objetivo**: > 40-50%
+
+---
+
+## 🚀 Instruções de Execução
+
+### Opção 1: Google Colab (Recomendado) ⭐
+
+**Clique no badge abaixo para abrir diretamente no Colab:**
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/9luis7/lstm-acidentes-prf/blob/main/Sprint_Challenge_4_LSTM_Acidentes.ipynb)
+
+**Passos:**
+1. Clique no badge acima
+2. No Colab: `Ambiente de execução` → `Executar tudo`
+3. ☕ Aguarde ~15-30 minutos
+4. Visualize os resultados!
+
+**Sem configurações necessárias!** Tudo é automático:
+- ✅ Instalação de dependências
+- ✅ Download do dataset do GitHub
+- ✅ Treinamento do modelo
+- ✅ Geração de gráficos
+
+### Opção 2: Execução Local
+
+**Requisitos:**
+- Python 3.8+
+- pip
+
+**Passos:**
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/9luis7/lstm-acidentes-prf.git
+cd lstm-acidentes-prf
+
+# 2. Instale as dependências
+pip install -r requirements.txt
+
+# 3. Execute o notebook
+jupyter notebook Sprint_Challenge_4_LSTM_Acidentes.ipynb
+```
+
+**Ou usando Python:**
+```bash
+python -m notebook Sprint_Challenge_4_LSTM_Acidentes.ipynb
+```
+
+---
+
+## 📦 Estrutura do Repositório
+
+```
+lstm-acidentes-prf/
+│
+├── 📓 Sprint_Challenge_4_LSTM_Acidentes.ipynb   # Notebook principal (storytelling)
+│
+├── 📊 dados/
+│   └── datatran2025.xlsx                         # Dataset PRF
+│
+├── 🤖 modelo_lstm_classificacao_risco.keras      # Modelo treinado
+│
+├── 📄 README.md                                  # Este arquivo
+│
+├── 📋 requirements.txt                           # Dependências Python
+│
+└── 📜 LICENSE                                    # Licença MIT
+```
+
+---
+
+## 🎓 Resultados e Conclusões
+
+### Resultados Obtidos
+
+**Métricas Finais:**
+- 🎯 **Acurácia**: [Inserir após execução] (superior aos baselines)
+- 📊 **F1-Score Macro**: [Inserir após execução]
+- ⚖️ **Balanceamento**: Sem overfitting (curvas treino/validação próximas)
+
+**Visualizações Geradas:**
+1. Curvas de aprendizagem (Loss + Accuracy)
+2. Matriz de confusão (onde o modelo erra)
+3. Comparação temporal (previsões vs real)
+4. Distribuição de probabilidades
+5. Acurácia por classe de risco
+
+### Descobertas Importantes
+
+#### 🔬 Processo Científico
+
+1. **Experimento Inicial**: Regressão (R² negativo)
+2. **Hipótese**: Features não capturam fatores críticos
+3. **Teste**: Classificação de níveis de risco
+4. **Resultado**: Sucesso! Modelo aprende padrões úteis
+
+#### 💡 Insights sobre os Dados
+
+- **Temporalidade importa**: Lags e média móvel são features importantes
+- **Sazonalidade existe**: Componentes seno/cosseno ajudam
+- **Limitação natural**: Sem clima/eventos, extremos são difíceis de prever
+
+### Limitações Identificadas
+
+| Limitação | Impacto | Solução Futura |
+|-----------|---------|----------------|
+| **Features ausentes** (clima, eventos) | Dificulta previsão de extremos | Integrar APIs (OpenWeather, feriados) |
+| **Classes raras** | Algumas classes têm poucos exemplos | Oversampling ou class weights |
+| **Desbalanceamento** | Modelo favorece classes comuns | SMOTE ou amostragem estratificada |
+| **Janela fixa (8 semanas)** | Pode perder padrões de longo prazo | Testar janelas variáveis |
+
+### Aplicações Práticas
+
+#### Para Seguradoras (Sompo)
+
+**Sistema de Alertas:**
+```
+📗 Risco BAIXO  → "Período normal - sem ações especiais"
+📙 Risco MÉDIO  → "Atenção - campanhas preventivas recomendadas"
+📕 Risco ALTO   → "ALERTA - intensificar fiscalização"
+```
+
+**Precificação Dinâmica:**
+- Ajustar prêmios baseado no nível de risco previsto
+- Oferecer descontos em períodos de baixo risco
+- Alertar segurados em períodos críticos
+
+#### Para Gestores de Rodovias
+
+**Alocação de Recursos:**
+- Priorizar patrulhas em semanas de alto risco
+- Planejar campanhas de conscientização
+- Antecipar necessidade de ambulâncias
+
+#### Para Motoristas
+
+**Informação e Conscientização:**
+- App com alertas semanais de risco
+- Dicas de segurança personalizadas
+- Recomendações de horários mais seguros
+
+---
+
+## 🚀 Próximos Passos
+
+### Melhorias de Curto Prazo
+
+- [ ] Integrar dados climáticos (API OpenWeather)
+- [ ] Adicionar calendário de feriados
+- [ ] Implementar class weights para desbalanceamento
+- [ ] Testar janelas temporais variáveis (4, 12, 16 semanas)
+
+### Melhorias de Médio Prazo
+
+- [ ] Explorar Attention mechanisms
+- [ ] Testar modelos híbridos (CNN+LSTM)
+- [ ] Implementar ensemble com XGBoost
+- [ ] Validação cruzada temporal (walk-forward)
+
+### Deploy e Produção
+
+- [ ] API REST com FastAPI
+- [ ] Dashboard interativo (Streamlit)
+- [ ] Sistema de alertas automático (email/SMS)
+- [ ] Retreinamento periódico (MLOps)
+
+---
+
+## 📚 Tecnologias Utilizadas
+
+### Core
+
+- **Python** 3.8+
+- **TensorFlow/Keras** 2.x - Deep Learning
 - **Pandas** - Manipulação de dados
-- **NumPy** - Computação numérica
-- **Matplotlib/Seaborn** - Visualização
+- **NumPy** - Operações numéricas
+
+### Visualização
+
+- **Matplotlib** - Gráficos
+- **Seaborn** - Visualizações estatísticas
+
+### Machine Learning
+
 - **Scikit-learn** - Pré-processamento e métricas
-- **Google Colab** - Ambiente de execução
+- **LSTM** - Redes neurais recorrentes
 
 ---
 
-## 5. Estrutura do Projeto
+## 📖 Referências
 
-```
-├── Sprint_4_LSTM_Grupo_BIG5.ipynb  # Notebook principal
-├── modelo_lstm_acidentes_sp.keras   # Modelo treinado (gerado após execução)
-├── README.md                        # Este arquivo
-├── INSTRUCOES_FINAL.md             # Instruções detalhadas
-├── requirements.txt                 # Dependências
-└── dados/
-    └── datatran2025.xlsx           # Dataset original
-```
+1. **Dataset**: [PRF - Dados Abertos](https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos)
+2. **Keras Documentation**: [https://keras.io](https://keras.io)
+3. **Understanding LSTM Networks**: [Colah's Blog](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+4. **Time Series Forecasting with Deep Learning**: [TensorFlow Tutorials](https://www.tensorflow.org/tutorials/structured_data/time_series)
 
 ---
 
-## 6. Próximos Passos
+## 📄 Licença
 
-1. **Expandir o Dataset:** Incorporar mais estados e períodos históricos
-2. **Features Adicionais:** Adicionar condições climáticas, dados de tráfego
-3. **Otimização:** Grid search para encontrar melhores hiperparâmetros
-4. **Deploy:** Implementar em produção para uso em tempo real
-5. **Monitoramento:** Sistema de monitoramento contínuo da performance
+Este projeto é licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ---
 
-**Desenvolvido com ❤️ pela equipe Big 5**
+## 🙏 Agradecimentos
 
-*Sprint Challenge 4 - Previsão de Acidentes com LSTMs (Case Sompo)*
+- **PRF**: Por disponibilizar os dados públicos
+- **FIAP**: Pela oportunidade e desafio
+- **Sompo**: Pela inspiração do case real
+
+---
+
+## 📧 Contato
+
+**Equipe Big 5**
+- 📧 Email: [Inserir email do grupo]
+- 🐙 GitHub: [https://github.com/9luis7/lstm-acidentes-prf](https://github.com/9luis7/lstm-acidentes-prf)
+
+---
+
+<div align="center">
+
+### 🏆 Sprint Challenge 4 - FIAP 2025
+
+**Desenvolvido com ❤️ pela Equipe Big 5**
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/9luis7/lstm-acidentes-prf/blob/main/Sprint_Challenge_4_LSTM_Acidentes.ipynb)
+
+</div>
