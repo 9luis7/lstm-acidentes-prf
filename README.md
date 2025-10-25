@@ -31,9 +31,10 @@ Este projeto desenvolve uma Rede Neural Recorrente (LSTM) para prever padrões d
 ### 🎯 Características Principais
 
 - **Modelo LSTM Avançado** com 3 camadas e regularização
-- **6 Features Enriquecidas** incluindo sazonalidade e componentes temporais
+- **11 Features Enriquecidas** incluindo histórico e tendências
 - **Múltiplos Estados** (10 estados brasileiros) para maior robustez
-- **Janela Temporal de 8 semanas** para contexto histórico adequado
+- **Janela Temporal de 12 semanas** para contexto histórico adequado
+- **Score de Gravidade Ponderado** como target inteligente
 - **Avaliação Completa** com múltiplas métricas e visualizações
 
 ## 👥 Integrantes
@@ -110,9 +111,11 @@ lstm-acidentes-prf/
 - **Regularização:** BatchNormalization + Dropout
 - **Otimizador:** Adam (learning rate: 0.001)
 - **Callbacks:** EarlyStopping + ReduceLROnPlateau
+- **Class Weights:** Balanceamento automático de classes
 
 ### Features Utilizadas
 
+#### **Features Temporais (6):**
 1. **Proporção de Acidentes Severos** (target)
 2. **Média de Pessoas por Acidente**
 3. **Média de Veículos por Acidente**
@@ -120,11 +123,18 @@ lstm-acidentes-prf/
 5. **Sazonalidade Seno** (padrões anuais)
 6. **Sazonalidade Cosseno** (padrões anuais)
 
+#### **Features de Histórico (5) - NOVAS:**
+7. **Score Lag 1** (semana anterior)
+8. **Score Lag 2** (2 semanas atrás)
+9. **Score Média 4 Semanas** (tendência)
+10. **Score Tendência** (diferença semanal)
+11. **Score Volatilidade** (desvio padrão)
+
 ### Dados
 
 - **Estados:** SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC
 - **Período:** Dados históricos agregados semanalmente
-- **Janela Temporal:** 8 semanas para prever a próxima semana
+- **Janela Temporal:** 12 semanas para prever a próxima semana
 - **Total de Sequências:** Centenas de amostras de treinamento
 
 ## 📊 Resultados Principais
@@ -200,6 +210,7 @@ O modelo gera 4 gráficos de análise:
 - Máximo 200 épocas com early stopping
 - Paciência de 15 épocas para early stopping
 - Learning rate adaptativo com redução automática
+- **Class weights** para balanceamento de classes
 
 ### Salvamento
 - Modelo salvo como `modelo_lstm_acidentes.keras`
