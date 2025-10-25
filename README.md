@@ -1,10 +1,40 @@
 # LSTM - Previsão de Acidentes PRF
 
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/9luis7/lstm-acidentes-prf)
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)](https://python.org)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13+-orange?style=flat-square&logo=tensorflow)](https://tensorflow.org)
+[![License](https://img.shields.io/badge/License-Academic-green?style=flat-square)](LICENSE)
+
 **Sprint Challenge 4 – Previsão de Acidentes com LSTMs (Case Sompo)**
+
+## 📑 Sumário
+
+- [📋 Sobre o Projeto](#-sobre-o-projeto)
+- [👥 Integrantes](#-integrantes)
+- [🎯 Objetivo](#-objetivo)
+- [🚀 Instalação e Execução](#-instalação-e-execução)
+- [📁 Estrutura do Projeto](#-estrutura-do-projeto)
+- [🧠 Arquitetura do Modelo](#-arquitetura-do-modelo)
+- [📊 Resultados Principais](#-resultados-principais)
+- [🔧 Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [📈 Como Interpretar os Resultados](#-como-interpretar-os-resultados)
+- [🚨 Solução de Problemas](#-solução-de-problemas)
+- [📝 Notas Técnicas](#-notas-técnicas)
+- [📞 Suporte](#-suporte)
+- [🤝 Contribuição](#-contribuição)
+- [📄 Licença](#-licença)
 
 ## 📋 Sobre o Projeto
 
 Este projeto desenvolve uma Rede Neural Recorrente (LSTM) para prever padrões de acidentes nas rodovias federais brasileiras, utilizando dados públicos da PRF (Polícia Rodoviária Federal). O modelo visa apoiar decisões estratégicas de prevenção e análise de riscos.
+
+### 🎯 Características Principais
+
+- **Modelo LSTM Avançado** com 3 camadas e regularização
+- **6 Features Enriquecidas** incluindo sazonalidade e componentes temporais
+- **Múltiplos Estados** (10 estados brasileiros) para maior robustez
+- **Janela Temporal de 8 semanas** para contexto histórico adequado
+- **Avaliação Completa** com múltiplas métricas e visualizações
 
 ## 👥 Integrantes
 
@@ -30,7 +60,7 @@ Desenvolver e treinar uma Rede Neural Recorrente (LSTM) para prever a **proporç
 
 ```bash
 # Clone o repositório
-git clone <url-do-repositorio>
+git clone https://github.com/9luis7/lstm-acidentes-prf.git
 cd lstm-acidentes-prf
 
 # Instale as dependências
@@ -39,7 +69,7 @@ pip install -r requirements.txt
 
 ### Execução no Google Colab
 
-1. **Abra o notebook:** `SPRINT_RNNs_LSTM.ipynb`
+1. **Abra o notebook:** [`SPRINT_RNNs_LSTM.ipynb`](SPRINT_RNNs_LSTM.ipynb)
 2. **Execute todas as células** em sequência (Runtime → Run All)
 3. **Aguarde o download** dos dados (primeira execução)
 4. **Visualize os resultados** nas células finais
@@ -61,12 +91,14 @@ lstm-acidentes-prf/
 ├── README.md                          # Este arquivo
 ├── SPRINT_RNNs_LSTM.ipynb            # Notebook principal
 ├── requirements.txt                   # Dependências Python
+├── .gitignore                        # Arquivos ignorados pelo Git
 ├── dados/                            # Pasta para dados (vazia)
+│   └── .gitkeep                      
 ├── modelos/                          # Pasta para modelos salvos
-├── resultados/                       # Resultados e relatórios
-│   ├── graficos/                     # Gráficos PNG salvos
-│   └── relatorio_tecnico.html       # Relatório técnico
-└── .gitignore                        # Arquivos ignorados pelo Git
+│   └── .gitkeep                      
+└── resultados/                       # Resultados e relatórios
+    ├── graficos/                     # Gráficos PNG salvos
+    └── relatorio_tecnico.html       # Relatório técnico
 ```
 
 ## 🧠 Arquitetura do Modelo
@@ -112,6 +144,8 @@ O modelo gera 4 gráficos de análise:
 2. **Curvas de Aprendizagem - MAE**
 3. **Comparação: Valores Reais vs. Previsões**
 4. **Gráfico de Resíduos**
+
+> 📊 **Nota:** Os gráficos são salvos automaticamente em `resultados/graficos/` ao executar o notebook.
 
 ## 🔧 Tecnologias Utilizadas
 
@@ -180,6 +214,16 @@ Para dúvidas ou problemas:
 3. **Execute as células** em sequência correta
 4. **Verifique a conexão** com internet para download
 
+## 🤝 Contribuição
+
+Este é um projeto acadêmico desenvolvido para o Sprint Challenge 4. Para contribuições:
+
+1. Fork o repositório
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
+
 ## 📄 Licença
 
 Este projeto foi desenvolvido para fins acadêmicos no contexto do Sprint Challenge 4.
@@ -187,3 +231,6 @@ Este projeto foi desenvolvido para fins acadêmicos no contexto do Sprint Challe
 ---
 
 **Desenvolvido com ❤️ pela equipe Big 5**
+
+[![GitHub](https://img.shields.io/badge/GitHub-9luis7-blue?style=flat-square&logo=github)](https://github.com/9luis7)
+[![Repository](https://img.shields.io/badge/Repository-lstm--acidentes--prf-green?style=flat-square)](https://github.com/9luis7/lstm-acidentes-prf)
