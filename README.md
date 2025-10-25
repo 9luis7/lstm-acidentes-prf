@@ -1,273 +1,127 @@
-# LSTM - Previsão de Acidentes PRF
+# Sprint Challenge 4 – Previsão de Acidentes com LSTMs (Case Sompo)
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/9luis7/lstm-acidentes-prf)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)](https://python.org)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13+-orange?style=flat-square&logo=tensorflow)](https://tensorflow.org)
-[![License](https://img.shields.io/badge/License-Academic-green?style=flat-square)](LICENSE)
+**Integrantes Big 5:**
+- Lucca Phelipe Masini RM 564121
+- Luiz Henrique Poss RM562177
+- Luis Fernando de Oliveira Salgado RM 561401
+- Igor Paixão Sarak RM 563726
+- Bernardo Braga Perobeli RM 562468
 
-**Sprint Challenge 4 – Previsão de Acidentes com LSTMs (Case Sompo)**
+---
 
-## 📑 Sumário
+## 1. Objetivo do Projeto
+Desenvolver e treinar uma Rede Neural Recorrente (LSTM) para prever padrões de acidentes nas rodovias federais, utilizando a base de dados pública da PRF. O modelo visa apoiar decisões estratégicas de prevenção e análise de riscos.
 
-- [LSTM - Previsão de Acidentes PRF](#lstm---previsão-de-acidentes-prf)
-  - [📑 Sumário](#-sumário)
-  - [📋 Sobre o Projeto](#-sobre-o-projeto)
-    - [🎯 Características Principais](#-características-principais)
-  - [👥 Integrantes](#-integrantes)
-  - [🎯 Objetivo](#-objetivo)
-  - [🚀 Instalação e Execução](#-instalação-e-execução)
-    - [Pré-requisitos](#pré-requisitos)
-    - [Instalação das Dependências](#instalação-das-dependências)
-    - [Execução no Google Colab](#execução-no-google-colab)
-    - [Execução Local](#execução-local)
-  - [📁 Estrutura do Projeto](#-estrutura-do-projeto)
-  - [🧠 Arquitetura do Modelo](#-arquitetura-do-modelo)
-    - [Características Técnicas](#características-técnicas)
-    - [Features Utilizadas](#features-utilizadas)
-      - [**Features Temporais (6):**](#features-temporais-6)
-      - [**Features de Histórico (5) - NOVAS:**](#features-de-histórico-5---novas)
-    - [Dados](#dados)
-  - [📊 Resultados Principais](#-resultados-principais)
-    - [Métricas de Avaliação](#métricas-de-avaliação)
-    - [Visualizações](#visualizações)
-  - [🔧 Tecnologias Utilizadas](#-tecnologias-utilizadas)
-  - [📈 Como Interpretar os Resultados](#-como-interpretar-os-resultados)
-    - [Gráficos de Treinamento](#gráficos-de-treinamento)
-    - [Previsões vs Real](#previsões-vs-real)
-    - [Resíduos](#resíduos)
-  - [🚨 Solução de Problemas](#-solução-de-problemas)
-    - [Erro de Download](#erro-de-download)
-    - [Erro de Memória](#erro-de-memória)
-    - [Gráficos não Aparecem](#gráficos-não-aparecem)
-  - [📝 Notas Técnicas](#-notas-técnicas)
-    - [Pré-processamento](#pré-processamento)
-    - [Treinamento](#treinamento)
-    - [Salvamento](#salvamento)
-  - [📞 Suporte](#-suporte)
-  - [🤝 Contribuição](#-contribuição)
-  - [📄 Licença](#-licença)
+---
 
-## 📋 Sobre o Projeto
+## 2. Instruções Claras de Execução
 
-Este projeto desenvolve uma Rede Neural Recorrente (LSTM) para prever padrões de acidentes nas rodovias federais brasileiras, utilizando dados públicos da PRF (Polícia Rodoviária Federal). O modelo visa apoiar decisões estratégicas de prevenção e análise de riscos.
+A forma mais simples de executar este projeto é através do Google Colab:
 
-### 🎯 Características Principais
+1.  **[Clique aqui para abrir o Notebook no Google Colab](https://colab.research.google.com/github/SEU_USUARIO/SEU_REPO/blob/main/Sprint_4_LSTM_Grupo_BIG5.ipynb)** *(**Atenção:** Substitua `SEU_USUARIO/SEU_REPO` pela URL do seu repositório)*
 
-- **Modelo LSTM Avançado** com 3 camadas e regularização
-- **11 Features Enriquecidas** incluindo histórico e tendências
-- **Múltiplos Estados** (10 estados brasileiros) para maior robustez
-- **Janela Temporal de 12 semanas** para contexto histórico adequado
-- **Score de Gravidade Ponderado** como target inteligente
-- **Avaliação Completa** com múltiplas métricas e visualizações
+2.  Com o notebook aberto, clique no menu **"Ambiente de execução"**.
+3.  Clique em **"Executar tudo"**.
 
-## 👥 Integrantes
+O notebook irá instalar as dependências, baixar o dataset do Google Drive, tratar os dados, treinar o modelo e gerar os gráficos de avaliação automaticamente.
 
-- **Lucca Phelipe Masini** - RM 564121
-- **Luiz Henrique Poss** - RM 562177  
-- **Luis Fernando de Oliveira Salgado** - RM 561401
-- **Igor Paixão Sarak** - RM 563726
-- **Bernardo Braga Perobeli** - RM 562468
+---
 
-## 🎯 Objetivo
+## 3. Relatório Curto do Projeto
 
-Desenvolver e treinar uma Rede Neural Recorrente (LSTM) para prever a **proporção de acidentes severos** (envolvendo mortos ou feridos graves) nas rodovias federais, utilizando dados históricos e features temporais enriquecidas.
+### Qual foi o target escolhido e por quê?
 
-## 🚀 Instalação e Execução
+O target escolhido foi uma variável binária chamada `severo`. 
+-   Ela recebe o valor `1` se o acidente envolveu `mortos > 0` ou `feridos_graves > 0`.
+-   Ela recebe o valor `0` para todos os outros casos (apenas feridos leves ou ilesos).
 
-### Pré-requisitos
+A justificativa é focar os esforços de previsão nos acidentes de maior impacto humano e social, que são o principal ponto de preocupação para estratégias de prevenção e para o mercado de seguros.
 
-- Python 3.8 ou superior
-- Google Colab (recomendado) ou Jupyter Notebook
-- Conexão com internet para download dos dados
+### Como os dados foram tratados?
 
-### Instalação das Dependências
+O tratamento foi feito em 3 etapas principais:
+1.  **Limpeza:** Carregamos o dataset (`.xlsx`), ajustamos tipos de dados (como `horario`) e criamos a coluna alvo `severo`.
+2.  **Agregação:** Transformamos os dados de registros individuais em uma série temporal. Agrupamos os acidentes por **semana** e por **estado (UF)**, calculando a `prop_severos` (proporção de acidentes severos) para cada período.
+3.  **Sequenciamento:** Para a LSTM, filtramos os dados para os estados principais (SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC) e criamos "janelas" de dados. O modelo usa os dados de 4 semanas (`X`) para prever a proporção da semana seguinte (`y`).
 
-```bash
-# Clone o repositório
-git clone https://github.com/9luis7/lstm-acidentes-prf.git
-cd lstm-acidentes-prf
+### Arquitetura do modelo LSTM
 
-# Instale as dependências
-pip install -r requirements.txt
-```
+Utilizamos uma arquitetura de LSTM "empilhada" (stacked), ideal para capturar padrões temporais:
+1.  **Camada LSTM** (`units=50`, `return_sequences=True`) - Lê a sequência de entrada.
+2.  **Dropout** (`0.2`) - Regularização para evitar overfitting.
+3.  **Camada LSTM** (`units=50`) - Processa a sequência da camada anterior.
+4.  **Dropout** (`0.2`) - Mais regularização.
+5.  **Camada Densa** (`units=1`) - A camada de saída, que prevê o valor final (a proporção de 0 a 1).
 
-### Execução no Google Colab
+O modelo foi compilado com o otimizador `adam` (learning rate 0.001) e a função de perda `mean_squared_error`.
 
-1. **Abra o notebook:** [`SPRINT_RNNs_LSTM.ipynb`](SPRINT_RNNs_LSTM.ipynb)
-2. **Execute todas as células** em sequência (Runtime → Run All)
-3. **Aguarde o download** dos dados (primeira execução)
-4. **Visualize os resultados** nas células finais
+### Métricas utilizadas para avaliação
 
-### Execução Local
+Utilizamos duas métricas principais para avaliar o modelo nos dados de validação:
+1.  **Loss (Mean Squared Error):** Usada pelo modelo durante o treino. O gráfico de Loss vs. Val_Loss mostrou que o modelo aprendeu e o `EarlyStopping` funcionou corretamente.
+2.  **Erro Médio Absoluto (MAE):** Métrica principal para interpretação humana. O modelo obteve um **MAE** que indica a precisão das previsões em pontos percentuais.
 
-```bash
-# Inicie o Jupyter Notebook
-jupyter notebook
-
-# Abra o arquivo SPRINT_RNNs_LSTM.ipynb
-# Execute todas as células
-```
-
-## 📁 Estrutura do Projeto
-
-```
-lstm-acidentes-prf/
-├── README.md                          # Este arquivo
-├── SPRINT_RNNs_LSTM.ipynb            # Notebook principal
-├── requirements.txt                   # Dependências Python
-├── .gitignore                        # Arquivos ignorados pelo Git
-├── dados/                            # Pasta para dados (vazia)
-│   └── .gitkeep                      
-├── modelos/                          # Pasta para modelos salvos
-│   └── .gitkeep                      
-└── resultados/                       # Resultados e relatórios
-    ├── graficos/                     # Gráficos PNG salvos
-    └── relatorio_tecnico.html       # Relatório técnico
-```
-
-## 🧠 Arquitetura do Modelo
-
-### Características Técnicas
-
-- **Tipo:** Rede Neural Recorrente (LSTM)
-- **Camadas:** 3 camadas LSTM (64, 32, 16 neurônios) com LSTM Bidirecional
-- **Regularização:** BatchNormalization + Dropout robusto (0.4, 0.3, 0.2)
-- **Otimizador:** Adam (learning rate: 0.001)
-- **Callbacks:** EarlyStopping restritivo (patience=5) + ReduceLROnPlateau
-- **Class Weights:** Balanceamento automático de classes
-- **LSTM Bidirecional** nas primeiras camadas para capturar contexto temporal em ambas direções
-- **Regularização robusta** com Dropout (0.4, 0.3, 0.2) para prevenir overfitting
-- **Early Stopping restritivo** (patience=5) para parar treinamento no momento ideal
+Isso significa que, em média, a previsão do modelo sobre a proporção de acidentes severos tem um erro baixo, demonstrando boa capacidade de generalização.
 
 ### Features Utilizadas
 
-#### **Features Temporais (6):**
+O modelo utiliza 6 features principais:
 1. **Proporção de Acidentes Severos** (target)
 2. **Média de Pessoas por Acidente**
 3. **Média de Veículos por Acidente**
-4. **Identificação de Fim de Semana**
+4. **Identificação de Fim de Semana** (binária)
 5. **Sazonalidade Seno** (padrões anuais)
 6. **Sazonalidade Cosseno** (padrões anuais)
 
-#### **Features de Histórico (5) - NOVAS:**
-7. **Score Lag 1** (semana anterior)
-8. **Score Lag 2** (2 semanas atrás)
-9. **Score Média 4 Semanas** (tendência)
-10. **Score Tendência** (diferença semanal)
-11. **Score Volatilidade** (desvio padrão)
+### Estados Incluídos
 
-### Dados
+O modelo foi treinado com dados de 10 estados brasileiros:
+- SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC
 
-- **Estados:** SP, MG, RJ, PR, RS, BA, CE, GO, PE, SC
-- **Período:** Dados históricos agregados semanalmente
-- **Janela Temporal:** 12 semanas para prever a próxima semana
-- **Total de Sequências:** Centenas de amostras de treinamento
+Essa diversidade geográfica garante que o modelo possa generalizar bem para diferentes regiões do país.
 
-## 📊 Resultados Principais
+### Janela Temporal
 
-### Métricas de Avaliação
+Utilizamos uma janela de **4 semanas** para prever a semana seguinte. Isso fornece contexto histórico suficiente para capturar padrões temporais sem tornar o modelo excessivamente complexo.
 
-- **MAE (Mean Absolute Error):** Erro médio absoluto
-- **MSE (Mean Squared Error):** Erro quadrático médio  
-- **RMSE (Root Mean Squared Error):** Raiz do erro quadrático médio
-- **R² (Coeficiente de Determinação):** Proporção da variância explicada
+---
 
-### Visualizações
-
-O modelo gera 4 gráficos de análise:
-
-1. **Curvas de Aprendizagem - Loss (MSE)**
-2. **Curvas de Aprendizagem - MAE**
-3. **Comparação: Valores Reais vs. Previsões**
-4. **Gráfico de Resíduos**
-
-> 📊 **Nota:** Os gráficos são salvos automaticamente em `resultados/graficos/` ao executar o notebook.
-
-## 🔧 Tecnologias Utilizadas
+## 4. Tecnologias Utilizadas
 
 - **Python 3.8+**
 - **TensorFlow/Keras** - Deep Learning
 - **Pandas** - Manipulação de dados
 - **NumPy** - Computação numérica
 - **Matplotlib/Seaborn** - Visualização
-- **Scikit-learn** - Pré-processamento
+- **Scikit-learn** - Pré-processamento e métricas
 - **Google Colab** - Ambiente de execução
 
-## 📈 Como Interpretar os Resultados
+---
 
-### Gráficos de Treinamento
-- **Loss decrescente:** Modelo está aprendendo
-- **Gap treino/validação:** Indica capacidade de generalização
-- **Estabilização:** Modelo convergiu
+## 5. Estrutura do Projeto
 
-### Previsões vs Real
-- **Linha laranja próxima à azul:** Boa precisão
-- **Captura de picos/vales:** Modelo aprendeu padrões
-- **Suavização excessiva:** Pode indicar underfitting
-
-### Resíduos
-- **Dispersão aleatória:** Bom sinal
-- **Padrões sistemáticos:** Indica problemas no modelo
-
-## 🚨 Solução de Problemas
-
-### Erro de Download
-```python
-# Se o download falhar, execute:
-!pip install gdown --upgrade
+```
+├── Sprint_4_LSTM_Grupo_BIG5.ipynb  # Notebook principal
+├── modelo_lstm_acidentes_sp.keras   # Modelo treinado (gerado após execução)
+├── README.md                        # Este arquivo
+├── INSTRUCOES_FINAL.md             # Instruções detalhadas
+├── requirements.txt                 # Dependências
+└── dados/
+    └── datatran2025.xlsx           # Dataset original
 ```
 
-### Erro de Memória
-- Reduza o batch_size na célula de treinamento
-- Use menos estados na filtragem inicial
+---
 
-### Gráficos não Aparecem
-- Execute a célula de visualização novamente
-- Verifique se matplotlib está instalado
+## 6. Próximos Passos
 
-## 📝 Notas Técnicas
-
-### Pré-processamento
-- Dados normalizados com MinMaxScaler (0-1)
-- Divisão temporal: 85% treino, 15% validação
-- Agregação semanal por estado
-
-### Treinamento
-- Máximo 200 épocas com early stopping
-- Paciência de 15 épocas para early stopping
-- Learning rate adaptativo com redução automática
-- **Class weights** para balanceamento de classes
-
-### Salvamento
-- Modelo salvo como `modelo_lstm_acidentes.keras`
-- Gráficos salvos automaticamente em `resultados/graficos/`
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-
-1. **Verifique os logs** de erro no notebook
-2. **Consulte a documentação** das bibliotecas utilizadas
-3. **Execute as células** em sequência correta
-4. **Verifique a conexão** com internet para download
-
-## 🤝 Contribuição
-
-Este é um projeto acadêmico desenvolvido para o Sprint Challenge 4. Para contribuições:
-
-1. Fork o repositório
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para fins acadêmicos no contexto do Sprint Challenge 4.
+1. **Expandir o Dataset:** Incorporar mais estados e períodos históricos
+2. **Features Adicionais:** Adicionar condições climáticas, dados de tráfego
+3. **Otimização:** Grid search para encontrar melhores hiperparâmetros
+4. **Deploy:** Implementar em produção para uso em tempo real
+5. **Monitoramento:** Sistema de monitoramento contínuo da performance
 
 ---
 
 **Desenvolvido com ❤️ pela equipe Big 5**
 
-[![GitHub](https://img.shields.io/badge/GitHub-9luis7-blue?style=flat-square&logo=github)](https://github.com/9luis7)
-[![Repository](https://img.shields.io/badge/Repository-lstm--acidentes--prf-green?style=flat-square)](https://github.com/9luis7/lstm-acidentes-prf)
+*Sprint Challenge 4 - Previsão de Acidentes com LSTMs (Case Sompo)*

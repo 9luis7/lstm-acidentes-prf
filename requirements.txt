@@ -20,3 +20,7 @@ tensorflow>=2.13.0
 # Jupyter (opcional, se executando localmente)
 jupyter>=1.0.0
 ipykernel>=6.0.0
+
+# Streamlit para dashboard interativo
+streamlit>=1.28.0
+plotly>=5.17.0
