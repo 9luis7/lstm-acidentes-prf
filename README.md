@@ -9,20 +9,43 @@
 
 ## 📑 Sumário
 
-- [📋 Sobre o Projeto](#-sobre-o-projeto)
-- [👥 Integrantes](#-integrantes)
-- [🎯 Objetivo](#-objetivo)
-- [🚀 Instalação e Execução](#-instalação-e-execução)
-- [📁 Estrutura do Projeto](#-estrutura-do-projeto)
-- [🧠 Arquitetura do Modelo](#-arquitetura-do-modelo)
-- [📊 Resultados Principais](#-resultados-principais)
-- [🔧 Tecnologias Utilizadas](#-tecnologias-utilizadas)
-- [📈 Como Interpretar os Resultados](#-como-interpretar-os-resultados)
-- [🚨 Solução de Problemas](#-solução-de-problemas)
-- [📝 Notas Técnicas](#-notas-técnicas)
-- [📞 Suporte](#-suporte)
-- [🤝 Contribuição](#-contribuição)
-- [📄 Licença](#-licença)
+- [LSTM - Previsão de Acidentes PRF](#lstm---previsão-de-acidentes-prf)
+  - [📑 Sumário](#-sumário)
+  - [📋 Sobre o Projeto](#-sobre-o-projeto)
+    - [🎯 Características Principais](#-características-principais)
+  - [👥 Integrantes](#-integrantes)
+  - [🎯 Objetivo](#-objetivo)
+  - [🚀 Instalação e Execução](#-instalação-e-execução)
+    - [Pré-requisitos](#pré-requisitos)
+    - [Instalação das Dependências](#instalação-das-dependências)
+    - [Execução no Google Colab](#execução-no-google-colab)
+    - [Execução Local](#execução-local)
+  - [📁 Estrutura do Projeto](#-estrutura-do-projeto)
+  - [🧠 Arquitetura do Modelo](#-arquitetura-do-modelo)
+    - [Características Técnicas](#características-técnicas)
+    - [Features Utilizadas](#features-utilizadas)
+      - [**Features Temporais (6):**](#features-temporais-6)
+      - [**Features de Histórico (5) - NOVAS:**](#features-de-histórico-5---novas)
+    - [Dados](#dados)
+  - [📊 Resultados Principais](#-resultados-principais)
+    - [Métricas de Avaliação](#métricas-de-avaliação)
+    - [Visualizações](#visualizações)
+  - [🔧 Tecnologias Utilizadas](#-tecnologias-utilizadas)
+  - [📈 Como Interpretar os Resultados](#-como-interpretar-os-resultados)
+    - [Gráficos de Treinamento](#gráficos-de-treinamento)
+    - [Previsões vs Real](#previsões-vs-real)
+    - [Resíduos](#resíduos)
+  - [🚨 Solução de Problemas](#-solução-de-problemas)
+    - [Erro de Download](#erro-de-download)
+    - [Erro de Memória](#erro-de-memória)
+    - [Gráficos não Aparecem](#gráficos-não-aparecem)
+  - [📝 Notas Técnicas](#-notas-técnicas)
+    - [Pré-processamento](#pré-processamento)
+    - [Treinamento](#treinamento)
+    - [Salvamento](#salvamento)
+  - [📞 Suporte](#-suporte)
+  - [🤝 Contribuição](#-contribuição)
+  - [📄 Licença](#-licença)
 
 ## 📋 Sobre o Projeto
 
@@ -107,11 +130,14 @@ lstm-acidentes-prf/
 ### Características Técnicas
 
 - **Tipo:** Rede Neural Recorrente (LSTM)
-- **Camadas:** 3 camadas LSTM (100, 100, 50 neurônios)
-- **Regularização:** BatchNormalization + Dropout
+- **Camadas:** 3 camadas LSTM (64, 32, 16 neurônios) com LSTM Bidirecional
+- **Regularização:** BatchNormalization + Dropout robusto (0.4, 0.3, 0.2)
 - **Otimizador:** Adam (learning rate: 0.001)
-- **Callbacks:** EarlyStopping + ReduceLROnPlateau
+- **Callbacks:** EarlyStopping restritivo (patience=5) + ReduceLROnPlateau
 - **Class Weights:** Balanceamento automático de classes
+- **LSTM Bidirecional** nas primeiras camadas para capturar contexto temporal em ambas direções
+- **Regularização robusta** com Dropout (0.4, 0.3, 0.2) para prevenir overfitting
+- **Early Stopping restritivo** (patience=5) para parar treinamento no momento ideal
 
 ### Features Utilizadas
 
