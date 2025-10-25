@@ -1,5 +1,6 @@
-# Arquivos de dados
+# Arquivos de dados (permitir datatran2025.xlsx)
 *.xlsx
+!dados/datatran2025.xlsx
 *.csv
 *.xls
 
