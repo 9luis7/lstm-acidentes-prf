@@ -1,6 +1,6 @@
 # 🚗 Sprint Challenge 4 – Previsão de Acidentes com LSTMs
 
-**Case Sompo**: Antecipando Padrões de Risco em Rodovias Brasileiras
+**Case Sompo**: Antecipando Volume de Acidentes em Rodovias Brasileiras
 
 ---
 
@@ -16,58 +16,58 @@
 
 ## 🎯 Objetivo do Projeto
 
-Desenvolver uma rede neural LSTM capaz de **classificar níveis de risco de acidentes severos** em rodovias federais brasileiras, utilizando dados públicos da PRF (Polícia Rodoviária Federal).
+Desenvolver uma rede neural LSTM capaz de **prever o número total de acidentes** em rodovias federais brasileiras, utilizando dados públicos da PRF (Polícia Rodoviária Federal).
 
 O modelo visa apoiar decisões estratégicas para:
-- 🚑 **Prevenção de riscos**: Identificar períodos críticos
-- 💰 **Seguradoras**: Precificação dinâmica de seguros
+- 🚑 **Prevenção de riscos**: Antecipar períodos de alta incidência
+- 💰 **Seguradoras**: Precificação dinâmica baseada em volume
 - 📊 **Planejamento logístico**: Alocação inteligente de recursos
 
 ---
 
-## 📊 Target Escolhido: Classificação de 4 Níveis de Risco
+## 📊 Target Escolhido: Previsão de Número Total de Acidentes
 
-### Definição das Classes
+### Definição do Target
 
-| Classe | Nome | Faixa | Descrição |
-|--------|------|-------|-----------|
-| 0 | **BAIXO** | < 20% | Menos de 20% dos acidentes são severos |
-| 1 | **MÉDIO-BAIXO** | 20-30% | Entre 20% e 30% de acidentes severos |
-| 2 | **MÉDIO-ALTO** | 30-40% | Entre 30% e 40% de acidentes severos |
-| 3 | **ALTO** | ≥ 40% | 40% ou mais de acidentes severos |
+**Objetivo**: Prever o número total de acidentes por semana em cada estado brasileiro.
+
+**Tipo**: Regressão (valor contínuo)
+- **Input**: Sequências de 8 semanas de histórico
+- **Output**: Número previsto de acidentes na semana seguinte
 
 ### Justificativa da Escolha
 
 #### 🔬 Processo Científico
 
-**Tentativa Inicial**: Regressão
-- Objetivo: Prever proporção exata de acidentes severos (valor contínuo)
-- ❌ Resultado: R² negativo (modelo pior que baseline)
-- ❌ Problema: Previsões constantes (~0.29), sem variabilidade
-- 🤔 Causa: Features disponíveis não capturam fatores críticos (clima, eventos, tráfego)
+**Tentativas Anteriores**:
+1. **Classificação de Risco**: Modelo sempre predizia a classe majoritária
+2. **Regressão de Proporção**: R² negativo, previsões constantes
+3. **Descoberta**: Features temporais não capturam fatores críticos para proporções
 
-**Descoberta Importante**:
-> As features temporais e de histórico disponíveis não contêm informação suficiente para previsões precisas de valores contínuos. Extremos dependem de fatores externos não capturados no dataset.
-
-**Solução Final**: Classificação
-- ✅ Mais robusta às limitações dos dados
-- ✅ Mais útil na prática (alertas: "Semana de risco ALTO")
-- ✅ Não requer precisão decimal
-- ✅ Facilita tomada de decisão
+**Solução Final**: Previsão de Volume Total
+- ✅ **Dados mais informativos**: Lags de contagem são altamente preditivos
+- ✅ **Padrões temporais claros**: Volume de acidentes tem sazonalidade
+- ✅ **Aplicação prática**: Gestores precisam saber "quantos acidentes esperar"
+- ✅ **Métricas interpretáveis**: MAE, RMSE, R² são intuitivos
 
 #### 💼 Valor Prático
 
-**Para Seguradoras:**
-```
-Risco BAIXO  → Precificação padrão
-Risco MÉDIO  → Campanhas preventivas
-Risco ALTO   → Alertas críticos + precificação ajustada
-```
-
 **Para Gestores de Rodovias:**
 ```
-Risco BAIXO  → Operação normal
-Risco ALTO   → Aumento de patrulhas + campanhas intensivas
+Previsão: 80 acidentes → Alocar mais patrulhas
+Previsão: 20 acidentes → Operação normal
+```
+
+**Para Seguradoras:**
+```
+Volume alto → Ajustar precificação
+Volume baixo → Campanhas promocionais
+```
+
+**Para Planejamento:**
+```
+Previsão semanal → Planejamento de recursos
+Tendência → Estratégias de longo prazo
 ```
 
 ---
@@ -77,50 +77,30 @@ Risco ALTO   → Aumento de patrulhas + campanhas intensivas
 ### 1. Limpeza e Preparação
 
 ```python
-# Criação da variável 'severo' (target binário intermediário)
-df['severo'] = ((df['mortos'] > 0) | (df['feridos_graves'] > 0)).astype(int)
-```
-
-**Definição de Acidente Severo:**
-- `severo = 1` se mortos > 0 **OU** feridos_graves > 0
-- `severo = 0` caso contrário
-
-### 2. Agregação Temporal
-
-**Transformação**: Acidentes individuais → Séries temporais semanais por UF
-
-```python
-# Agregação semanal
+# Agregação semanal por estado
 weekly_df = df.groupby([pd.Grouper(freq='W'), 'uf']).agg({
-    'total_acidentes': count,
-    'acidentes_severos': sum,
-    'pessoas_media': mean,
-    'veiculos_media': mean
+    'total_acidentes': 'count',
+    'pessoas_media': 'mean',
+    'veiculos_media': 'mean'
 })
-
-# Cálculo do target contínuo
-weekly_df['prop_severos'] = acidentes_severos / total_acidentes
 ```
 
-**Por quê semanal?**
-- ✅ Suficiente para capturar padrões
-- ✅ Evita esparsidade (muitos zeros diários)
-- ✅ Útil para planejamento (campanhas semanais)
+**Definição de Acidente**: Qualquer registro no dataset PRF
 
-### 3. Feature Engineering
+### 2. Feature Engineering
 
 **12 Features Criadas:**
 
 | Categoria | Features | Propósito |
 |-----------|----------|-----------|
-| **Temporais** | `dia_semana`, `mes`, `fim_semana` | Capturar padrões semanais/mensais |
-| **Sazonalidade** | `sazonalidade_sen`, `sazonalidade_cos` | Ciclos anuais (férias, festas) |
-| **Histórico (Lags)** | `prop_severos_lag1/2/3` | Memória das últimas 3 semanas |
-| **Estatísticas** | `prop_severos_ma3` | Média móvel (tendência) |
-| | `prop_severos_tendencia` | Está subindo ou descendo? |
-| | `prop_severos_volatilidade` | Estabilidade da série |
+| **Temporais** | `dia_semana`, `mes`, `fim_semana` | Padrões semanais/mensais |
+| **Sazonalidade** | `sazonalidade_sen`, `sazonalidade_cos` | Ciclos anuais |
+| **Histórico (Lags)** | `acidentes_lag1/2/3` | Memória das últimas 3 semanas |
+| **Estatísticas** | `acidentes_ma3` | Média móvel (tendência) |
+| | `acidentes_tendencia` | Está subindo ou descendo? |
+| | `acidentes_volatilidade` | Estabilidade da série |
 
-### 4. Preparação para LSTM
+### 3. Preparação para LSTM
 
 **Sequências Temporais:**
 ```
@@ -129,7 +109,7 @@ Formato: [amostras, 8 timesteps, 12 features]
 ```
 
 **Normalização:**
-- MinMaxScaler (0-1) para todas as features
+- MinMaxScaler (0-1) para features e target
 - Essencial para convergência da LSTM
 
 **Divisão Temporal:**
@@ -146,7 +126,7 @@ Formato: [amostras, 8 timesteps, 12 features]
 Input: (8 timesteps, 12 features)
     ↓
 ┌─────────────────────────────┐
-│  LSTM Layer 1 (64 units)    │  ← Captura padrões temporais complexos
+│  LSTM Layer 1 (128 units)    │  ← Captura padrões temporais complexos
 │  return_sequences=True       │
 └─────────────────────────────┘
     ↓
@@ -155,7 +135,7 @@ Input: (8 timesteps, 12 features)
 └─────────────────────────────┘
     ↓
 ┌─────────────────────────────┐
-│  LSTM Layer 2 (32 units)     │  ← Refina os padrões
+│  LSTM Layer 2 (64 units)     │  ← Refina os padrões
 └─────────────────────────────┘
     ↓
 ┌─────────────────────────────┐
@@ -163,7 +143,7 @@ Input: (8 timesteps, 12 features)
 └─────────────────────────────┘
     ↓
 ┌─────────────────────────────┐
-│  Dense (32 units, ReLU)      │  ← Processamento não-linear
+│  Dense (32 units, ReLU)       │  ← Processamento não-linear
 └─────────────────────────────┘
     ↓
 ┌─────────────────────────────┐
@@ -171,7 +151,11 @@ Input: (8 timesteps, 12 features)
 └─────────────────────────────┘
     ↓
 ┌─────────────────────────────┐
-│  Dense (4 units, Softmax)    │  ← Probabilidades das 4 classes
+│  Dense (16 units, ReLU)      │  ← Camada intermediária
+└─────────────────────────────┘
+    ↓
+┌─────────────────────────────┐
+│  Dense (1 unit, Linear)      │  ← Saída: número de acidentes
 └─────────────────────────────┘
 ```
 
@@ -179,9 +163,9 @@ Input: (8 timesteps, 12 features)
 
 | Parâmetro | Valor | Justificativa |
 |-----------|-------|---------------|
-| **Loss Function** | `categorical_crossentropy` | Padrão para classificação multiclasse |
+| **Loss Function** | `mean_absolute_error` | Adequada para regressão |
 | **Optimizer** | `Adam` (lr=0.001) | Adaptativo, converge bem |
-| **Batch Size** | 16 | Balanceio entre velocidade e estabilidade |
+| **Batch Size** | 32 | Balanceio entre velocidade e estabilidade |
 | **Epochs** | 100 | Com EarlyStopping |
 | **Dropout** | 0.2 | Regularização moderada |
 
@@ -189,14 +173,14 @@ Input: (8 timesteps, 12 features)
 
 **EarlyStopping:**
 ```python
-patience=20, restore_best_weights=True
+patience=15, restore_best_weights=True
 ```
-- Para se não houver melhoria em 20 épocas
+- Para se não houver melhoria em 15 épocas
 - Restaura pesos da melhor época
 
 **ReduceLROnPlateau:**
 ```python
-factor=0.5, patience=10
+factor=0.5, patience=7
 ```
 - Reduz learning rate pela metade se estagnado
 - Ajuda a escapar de platôs
@@ -207,21 +191,19 @@ factor=0.5, patience=10
 
 ### Métricas Utilizadas
 
-Para classificação multiclasse, utilizamos:
+Para regressão, utilizamos:
 
 | Métrica | Descrição | Objetivo |
 |---------|-----------|----------|
-| **Acurácia** | % de previsões corretas | > 40-50% (baseline ~30%) |
-| **Precision** | De todas as previsões da classe X, quantas estão corretas? | Alta confiança nas previsões |
-| **Recall** | De todos os casos reais da classe X, quantos identificamos? | Não perder casos importantes |
-| **F1-Score** | Média harmônica de Precision e Recall | Balanceamento geral |
-| **Matriz de Confusão** | Onde o modelo erra? | Identificar confusões sistemáticas |
+| **MAE** | Erro absoluto médio | Interpretável (acidentes) |
+| **RMSE** | Raiz do erro quadrático médio | Penaliza erros grandes |
+| **R² Score** | Coeficiente de determinação | % da variância explicada |
+| **MAPE** | Erro percentual absoluto médio | Erro relativo |
 
 ### Baselines para Comparação
 
-- 🎲 **Random Guess**: 25% (4 classes equiprováveis)
-- 📊 **Classe Mais Comum**: ~30-35% (sempre prever a classe majoritária)
-- 🎯 **Nosso Objetivo**: > 40-50%
+- 📊 **Média Histórica**: Sempre prever a média (55.5 acidentes)
+- 🎯 **Nosso Objetivo**: R² > 0.70, MAE < 15 acidentes
 
 ---
 
@@ -241,7 +223,7 @@ Para classificação multiclasse, utilizamos:
 
 **Sem configurações necessárias!** Tudo é automático:
 - ✅ Instalação de dependências
-- ✅ Download do dataset do GitHub
+- ✅ Carregamento do dataset
 - ✅ Treinamento do modelo
 - ✅ Geração de gráficos
 
@@ -265,11 +247,6 @@ pip install -r requirements.txt
 jupyter notebook Sprint_Challenge_4_LSTM_Acidentes.ipynb
 ```
 
-**Ou usando Python:**
-```bash
-python -m notebook Sprint_Challenge_4_LSTM_Acidentes.ipynb
-```
-
 ---
 
 ## 📦 Estrutura do Repositório
@@ -277,18 +254,14 @@ python -m notebook Sprint_Challenge_4_LSTM_Acidentes.ipynb
 ```
 lstm-acidentes-prf/
 │
-├── 📓 Sprint_Challenge_4_LSTM_Acidentes.ipynb   # Notebook principal (storytelling)
+├── 📓 Sprint_Challenge_4_LSTM_Acidentes.ipynb   # Notebook principal
 │
 ├── 📊 dados/
 │   └── datatran2025.xlsx                         # Dataset PRF
 │
-├── 🤖 modelo_lstm_classificacao_risco.keras      # Modelo treinado
-│
 ├── 📄 README.md                                  # Este arquivo
 │
-├── 📋 requirements.txt                           # Dependências Python
-│
-└── 📜 LICENSE                                    # Licença MIT
+└── 📋 requirements.txt                           # Dependências Python
 ```
 
 ---
@@ -298,39 +271,38 @@ lstm-acidentes-prf/
 ### Resultados Obtidos
 
 **Métricas Finais:**
-- 🎯 **Acurácia**: [Inserir após execução] (superior aos baselines)
-- 📊 **F1-Score Macro**: [Inserir após execução]
-- ⚖️ **Balanceamento**: Sem overfitting (curvas treino/validação próximas)
+- 🎯 **R² Score**: 0.8114 (81.1% da variância explicada)
+- 📊 **MAE**: 11.47 acidentes (erro médio)
+- 📈 **RMSE**: 22.09 acidentes
+- 📊 **MAPE**: 34.60%
+- 🏆 **Melhoria vs Baseline**: 70.9%
 
-**Visualizações Geradas:**
-1. Curvas de aprendizagem (Loss + Accuracy)
-2. Matriz de confusão (onde o modelo erra)
-3. Comparação temporal (previsões vs real)
-4. Distribuição de probabilidades
-5. Acurácia por classe de risco
+**Qualidade das Predições:**
+- 70.2% das predições têm erro < 10 acidentes
+- Mediana do erro: 5.91 acidentes
+- 75% das predições têm erro ≤ 11 acidentes
 
 ### Descobertas Importantes
 
 #### 🔬 Processo Científico
 
-1. **Experimento Inicial**: Regressão (R² negativo)
-2. **Hipótese**: Features não capturam fatores críticos
-3. **Teste**: Classificação de níveis de risco
-4. **Resultado**: Sucesso! Modelo aprende padrões úteis
+1. **Experimento Inicial**: Classificação (sempre predizia classe majoritária)
+2. **Segunda Tentativa**: Regressão de proporção (R² negativo)
+3. **Descoberta**: Features temporais são mais preditivas para volume que para proporção
+4. **Solução Final**: Regressão de volume total (sucesso!)
 
 #### 💡 Insights sobre os Dados
 
-- **Temporalidade importa**: Lags e média móvel são features importantes
+- **Lags são cruciais**: Histórico de 3 semanas é altamente preditivo
 - **Sazonalidade existe**: Componentes seno/cosseno ajudam
-- **Limitação natural**: Sem clima/eventos, extremos são difíceis de prever
+- **Volume é mais previsível**: Que proporção de severidade
 
 ### Limitações Identificadas
 
 | Limitação | Impacto | Solução Futura |
 |-----------|---------|----------------|
 | **Features ausentes** (clima, eventos) | Dificulta previsão de extremos | Integrar APIs (OpenWeather, feriados) |
-| **Classes raras** | Algumas classes têm poucos exemplos | Oversampling ou class weights |
-| **Desbalanceamento** | Modelo favorece classes comuns | SMOTE ou amostragem estratificada |
+| **Outliers extremos** | Alguns picos não são capturados | Detecção de anomalias + tratamento |
 | **Janela fixa (8 semanas)** | Pode perder padrões de longo prazo | Testar janelas variáveis |
 
 ### Aplicações Práticas
@@ -339,27 +311,27 @@ lstm-acidentes-prf/
 
 **Sistema de Alertas:**
 ```
-📗 Risco BAIXO  → "Período normal - sem ações especiais"
-📙 Risco MÉDIO  → "Atenção - campanhas preventivas recomendadas"
-📕 Risco ALTO   → "ALERTA - intensificar fiscalização"
+📗 Volume BAIXO  → "Período normal - sem ações especiais"
+📙 Volume MÉDIO  → "Atenção - campanhas preventivas recomendadas"
+📕 Volume ALTO   → "ALERTA - intensificar fiscalização"
 ```
 
 **Precificação Dinâmica:**
-- Ajustar prêmios baseado no nível de risco previsto
-- Oferecer descontos em períodos de baixo risco
+- Ajustar prêmios baseado no volume previsto
+- Oferecer descontos em períodos de baixo volume
 - Alertar segurados em períodos críticos
 
 #### Para Gestores de Rodovias
 
 **Alocação de Recursos:**
-- Priorizar patrulhas em semanas de alto risco
+- Priorizar patrulhas em semanas de alto volume
 - Planejar campanhas de conscientização
 - Antecipar necessidade de ambulâncias
 
 #### Para Motoristas
 
 **Informação e Conscientização:**
-- App com alertas semanais de risco
+- App com alertas semanais de volume
 - Dicas de segurança personalizadas
 - Recomendações de horários mais seguros
 
@@ -371,7 +343,7 @@ lstm-acidentes-prf/
 
 - [ ] Integrar dados climáticos (API OpenWeather)
 - [ ] Adicionar calendário de feriados
-- [ ] Implementar class weights para desbalanceamento
+- [ ] Implementar detecção de outliers
 - [ ] Testar janelas temporais variáveis (4, 12, 16 semanas)
 
 ### Melhorias de Médio Prazo
@@ -437,7 +409,6 @@ Este projeto é licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE)
 ## 📧 Contato
 
 **Equipe Big 5**
-- 📧 Email: [Inserir email do grupo]
 - 🐙 GitHub: [https://github.com/9luis7/lstm-acidentes-prf](https://github.com/9luis7/lstm-acidentes-prf)
 
 ---
