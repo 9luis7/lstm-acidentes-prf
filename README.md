@@ -2,6 +2,10 @@
 
 **Case Sompo**: Antecipando Volume de Acidentes em Rodovias Brasileiras
 
+## 🎥 Apresentação do Projeto
+
+📺 **[Assista à apresentação completa do projeto no YouTube](https://youtu.be/Gxeuqourrzk)**
+
 ---
 
 ## 👥 Equipe Big 5
